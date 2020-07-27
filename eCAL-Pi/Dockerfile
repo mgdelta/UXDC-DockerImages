@@ -10,7 +10,7 @@ ARG ECAL_TAG_VERSION="v5.5.5"
 #RUN install_packages python3.6-dev python3.7-dev
 
 # dependency packages (with qt5, but we will not need it here in the headless docker image) 
-RUN install_packages wget git cmake doxygen graphviz build-essential zlib1g-dev libhdf5-dev libprotobuf-dev libprotoc-dev protobuf-compiler libcurl4-openssl-dev file qt5-default \
+RUN install_packages wget git cmake doxygen graphviz build-essential zlib1g-dev libhdf5-dev libprotobuf-dev libprotoc-dev protobuf-compiler libcurl4-openssl-dev file \
 	python3-pip python3.6-dev python3.7-dev openssl libssl-dev
 
 # python modules necessary for eCAL
