@@ -2,12 +2,12 @@
 
 Just build the Image (staged file) like
 ```
-docker build -t ecal_on_pi:v5.5.5 . -f Dockerfile.staged
+docker build -t --rm uxdc-pi3-ecal-base:5.7.4 . -f Dockerfile-staged_uxdc-pi3-ecal-base_5.7.4
 ```
 
 Running the Image in a Container
 ```
-docker run --rm -itd --network host --name <Containername> ecal_on_pi:v5.5.5 
+docker run --rm -itd --network host --name <Containername> uxdc-pi3-ecal-base:5.7.4 
 ```
   
 Looking into the Container with bash

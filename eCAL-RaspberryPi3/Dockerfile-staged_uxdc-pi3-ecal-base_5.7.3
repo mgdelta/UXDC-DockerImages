@@ -1,0 +1,62 @@
+# Get base Image for Raspberry Pi 3 32Bit OS
+# This Image comes from Balenalib as a debian/raspbian base image (small one)
+# Please have a look on what images are available on: https://balena.io/docs/reference/base-images/base-images-ref/
+# This distro is using some special commands to install packages
+# You need internet access to build this image
+# Docker build process as staged build to keep image as small as possible
+
+FROM balenalib/raspberrypi3:latest as imagebase
+# dependency packages (to build and use eCAL)
+RUN install_packages wget git cmake doxygen graphviz build-essential zlib1g-dev libhdf5-dev libprotobuf-dev libprotoc-dev protobuf-compiler libcurl4-openssl-dev file \
+python3-pip python3.6-dev python3.7-dev openssl libssl-dev
+
+# python modules necessary for eCAL
+RUN python3 -m pip install setuptools
+
+# cleanup system on this point
+RUN apt-get clean
+RUN apt-get autoremove --purge
+
+
+# Next stage, based on actual Image with Dependencies, build eCAL in this Image
+# Created packages should be transfered to following stage to install eCAL binaries
+# Used eCAL Version in this build is v5.7.3
+# Build steps depend on used eCAL Version!! Modify when change eCAL Version
+
+FROM imagebase as buildecal
+WORKDIR /home/eCAL
+# Change eCAL Tag version here
+ARG ECAL_TAG_VERSION="v5.7.3"
+RUN git clone --branch $ECAL_TAG_VERSION --recursive git://github.com/continental/ecal.git
+# let's go for compiling
+WORKDIR /home/eCAL/ecal/_build
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release \
+	-DECAL_THIRDPARTY_BUILD_PROTOBUF=OFF \
+	-DECAL_THIRDPARTY_BUILD_CURL=OFF \
+	-DECAL_THIRDPARTY_BUILD_HDF5=OFF \
+	-DBUILD_SAMPLES=ON \
+	-DECAL_INSTALL_SAMPLE_SOURCES=ON \
+	-DBUILD_PY_BINDING=ON \
+	-DECAL_INCLUDE_PY_SAMPLES=ON \
+	-DBUILD_APPS=OFF \
+	-DHAS_QT5=OFF
+RUN make -j4
+# create binary packages to install in final image
+RUN cpack -G DEB
+RUN cmake --build . --target create_python_egg --config Release
+
+
+# Final stage
+# Use our own base Image, copy eCAL to this one and install it there
+# Final eCAL Image for further usage (Apps based on eCAL)
+
+FROM imagebase as ecalfinal
+WORKDIR /home/eCAL
+COPY --from=buildecal /home/eCAL/ecal/_build/_deploy .
+RUN dpkg -i eCAL-*
+RUN python3 -m easy_install ecal-*
+
+
+# Do nothing and keep this container running endless for development purposes only, remove later
+# connect to this Container's shell with docker exec -it <mycontainer> bash
+#ENTRYPOINT ["tail", "-f", "/dev/null"]

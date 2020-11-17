@@ -6,7 +6,7 @@
 # Docker build process as staged build to keep image as small as possible
 
 FROM balenalib/raspberrypi3:latest as imagebase
-# dependency packages (to build and use eCAL) 
+# dependency packages (to build and use eCAL)
 RUN install_packages wget git cmake doxygen graphviz build-essential zlib1g-dev libhdf5-dev libprotobuf-dev libprotoc-dev protobuf-compiler libcurl4-openssl-dev file \
 python3-pip python3.6-dev python3.7-dev openssl libssl-dev
 
@@ -20,20 +20,20 @@ RUN apt-get autoremove --purge
 
 # Next stage, based on actual Image with Dependencies, build eCAL in this Image
 # Created packages should be transfered to following stage to install eCAL binaries
-# Used eCAL Version in this build is v5.5.0 
+# Used eCAL Version in this build is v5.7.4
 # Build steps depend on used eCAL Version!! Modify when change eCAL Version
 
 FROM imagebase as buildecal
 WORKDIR /home/eCAL
 # Change eCAL Tag version here
-ARG ECAL_TAG_VERSION="v5.5.5"
-RUN git clone --branch $ECAL_TAG_VERSION --recursive git://github.com/continental/ecal.git 
+ARG ECAL_TAG_VERSION="v5.7.4"
+RUN git clone --branch $ECAL_TAG_VERSION --recursive git://github.com/continental/ecal.git
 # let's go for compiling
 WORKDIR /home/eCAL/ecal/_build
 RUN cmake .. -DCMAKE_BUILD_TYPE=Release \
 	-DECAL_THIRDPARTY_BUILD_PROTOBUF=OFF \
-	#-DECAL_THIRDPARTY_BUILD_CURL=OFF \
-	#-DECAL_THIRDPARTY_BUILD_HDF5=OFF \
+	-DECAL_THIRDPARTY_BUILD_CURL=OFF \
+	-DECAL_THIRDPARTY_BUILD_HDF5=OFF \
 	-DBUILD_SAMPLES=ON \
 	-DECAL_INSTALL_SAMPLE_SOURCES=ON \
 	-DBUILD_PY_BINDING=ON \
